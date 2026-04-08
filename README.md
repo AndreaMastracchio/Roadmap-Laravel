@@ -62,20 +62,6 @@ Avvia l'intero stack con **Hot Reload** (le modifiche al codice si riflettono is
 - **Interfaccia Web**: [http://localhost:8081](http://localhost:8081)
 - **API Health Check**: [http://localhost:5006/api/health](http://localhost:5006/api/health)
 
-### 🚢 Kubernetes (Deploy)
-Per avviare i servizi in un cluster Kubernetes:
-
-**Produzione:**
-```bash
-kubectl apply -k ../server/k8s-laravelstudy/production/
-```
-
-**Staging:**
-```bash
-kubectl apply -k ../server/k8s-laravelstudy/staging/
-```
-Assicurati di aver caricato le immagini `laravelstudy-backend:latest` e `laravelstudy-frontend:latest` nel tuo cluster (es. `kind load docker-image ...` o tramite un Registry).
-
 ---
 
 ## 🖥️ Caratteristiche Distintive
