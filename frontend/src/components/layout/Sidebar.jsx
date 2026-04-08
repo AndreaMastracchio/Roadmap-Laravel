@@ -1,0 +1,397 @@
+import React, { memo } from 'react';
+import {
+  Box,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  Toolbar,
+  Tooltip,
+  Collapse,
+} from '@mui/material';
+import {
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  QuizOutlined,
+  AssignmentOutlined,
+  SignalCellularAlt,
+  SignalCellularAlt1Bar,
+  SignalCellularAlt2Bar,
+  HomeOutlined,
+  Terminal as TerminalIcon,
+  Person as PersonIcon,
+  Logout as LogoutIcon,
+  ShoppingBagOutlined as ShopIcon,
+  CheckCircle as CheckCircleIcon,
+} from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
+import LaravelListItem from '../ui/LaravelListItem';
+import LaravelTypography from '../ui/LaravelTypography';
+import { Avatar, Button, Typography, LinearProgress } from '@mui/material';
+
+const SidebarContent = memo(({
+  courses = [],
+  activeCourse,
+  modules = [],
+  sections = [],
+  activeModule,
+  activeSection,
+  questions = [],
+  exercises = [],
+  handleCourseSelect,
+  handleModuleSelect,
+  handleSectionSelect,
+  handleDrawerToggle,
+  onToggleConsole,
+  isConsoleOpen,
+  onOpenAuth,
+  isDesktop,
+  drawerOpen
+}) => {
+  const { user, logout } = useAuth();
+
+  return (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#ffffff', borderRight: '1px solid #f1f5f9', overflow: 'hidden' }}>
+      <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: drawerOpen ? 'space-between' : 'center', px: drawerOpen ? 2.5 : 1, py: 3 }}>
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', gap: 1.2, cursor: 'pointer', flexShrink: 0 }}
+          onClick={() => handleCourseSelect(null)}
+        >
+          <Box
+            sx={{
+              bgcolor: '#326ce5',
+              borderRadius: '10px',
+              p: 0.7,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 10px rgba(50, 108, 229, 0.25)',
+              flexShrink: 0,
+              width: 32,
+              height: 32
+            }}
+          >
+            <img
+              src="https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.svg"
+              alt="K8s Logo"
+              style={{ width: 20, height: 20, filter: 'brightness(0) invert(1)', flexShrink: 0 }}
+            />
+          </Box>
+          {drawerOpen && (
+            <LaravelTypography weight="bold" variant="h6" sx={{ color: '#1e293b', fontSize: '1.25rem', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
+              KubeStudy
+            </LaravelTypography>
+          )}
+        </Box>
+        {isDesktop && (
+          <IconButton
+            onClick={handleDrawerToggle}
+            size="small"
+            sx={{
+              bgcolor: 'white',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+              '&:hover': { bgcolor: '#f3f4f6' },
+              display: drawerOpen ? 'flex' : 'none' // Lo mostriamo solo se aperto qui, se chiuso usiamo quello sotto o quello in header
+            }}
+          >
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Toolbar>
+
+      <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden', px: 1, pb: 4 }}>
+        <LaravelListItem
+          onClick={onToggleConsole}
+          active={isConsoleOpen}
+          hideText={!drawerOpen}
+          icon={
+            <Box sx={{
+              p: 0.8,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(0,0,0,0.05)',
+              display: 'flex',
+              color: '#1e293b'
+            }}>
+              <TerminalIcon sx={{ fontSize: 18 }} />
+            </Box>
+          }
+          primary="Console Interattiva"
+          sx={{ mb: 2, mt: 0, bgcolor: 'rgba(0,0,0,0.02)' }}
+        />
+        <Divider sx={{ my: 2, mx: drawerOpen ? 2 : 1, opacity: 0.5 }} />
+
+      {drawerOpen && (
+        <LaravelTypography
+          variant="overline"
+          weight="bold"
+          color="text.secondary"
+          sx={{ px: 2, mt: 1, mb: 1, display: 'block', letterSpacing: 1.5, fontSize: '0.65rem', opacity: 0.8 }}
+        >
+          {activeCourse ? 'CONTENUTO CORSO' : 'ESPLORA PERCORSI'}
+        </LaravelTypography>
+      )}
+
+      {drawerOpen && activeCourse && !activeCourse.isIntro && (
+        <Box sx={{ px: 2, mb: 2 }}>
+           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <LaravelTypography variant="caption" color="text.secondary">Il tuo progresso</LaravelTypography>
+              <LaravelTypography variant="caption" weight="bold">
+                {Math.round((modules.filter(m => user?.completedModules?.includes(`${activeCourse.id}-${m.id}`) || user?.completedModules?.includes(m.id)).length / (modules.length || 1)) * 100)}%
+              </LaravelTypography>
+           </Box>
+           <LinearProgress
+              variant="determinate"
+              value={(modules.filter(m => user?.completedModules?.includes(`${activeCourse.id}-${m.id}`) || user?.completedModules?.includes(m.id)).length / (modules.length || 1)) * 100}
+              sx={{ height: 4, borderRadius: 2, bgcolor: '#f1f5f9', '& .MuiLinearProgress-bar': { borderRadius: 2 } }}
+           />
+        </Box>
+      )}
+
+      {!activeCourse ? (
+        <>
+          {courses.filter(c => !c.comingSoon && (!c.isPrivate || user?.purchasedProjects?.includes(c.id))).map((course) => (
+            <LaravelListItem
+              key={course.id}
+              onClick={() => handleCourseSelect(course)}
+              hideText={!drawerOpen}
+              icon={
+                <Box sx={{
+                  p: 0.8,
+                  borderRadius: 1.5,
+                  bgcolor: `${course.color}10`,
+                  display: 'flex',
+                  color: course.color
+                }}>
+                  {React.cloneElement(course.icon, { sx: { fontSize: 18 } })}
+                </Box>
+              }
+              primary={course.title}
+              sx={{ mb: 1 }}
+            />
+          ))}
+        </>
+      ) : (
+        <>
+          <LaravelListItem
+            onClick={() => handleCourseSelect(null)}
+            hideText={!drawerOpen}
+            icon={<HomeOutlined fontSize="small" />}
+            primary="Torna alla Home"
+            sx={{ mb: 2, mt: 1 }}
+          />
+          <Divider sx={{ my: 1, mx: drawerOpen ? 2 : 1, opacity: 0.5 }} />
+
+          {modules.map((mod) => (
+            <React.Fragment key={mod.id}>
+              <LaravelListItem
+                onClick={() => handleModuleSelect(mod)}
+                active={activeModule && activeModule.id === mod.id}
+                hideText={!drawerOpen}
+                icon={React.cloneElement(mod.icon, {
+                  fontSize: 'small',
+                  sx: { color: (user?.completedModules?.includes(`${activeCourse.id}-${mod.id}`) || user?.completedModules?.includes(mod.id)) ? '#10b981' : 'inherit' }
+                })}
+                primary={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'space-between', width: '100%' }}>
+                    <Typography variant="body2" sx={{
+                      fontWeight: (activeModule && activeModule.id === mod.id) ? 700 : 500,
+                      fontSize: '0.875rem'
+                    }}>
+                      {mod.title}
+                    </Typography>
+                    {drawerOpen && (user?.completedModules?.includes(`${activeCourse.id}-${mod.id}`) || user?.completedModules?.includes(mod.id)) && (
+                      <CheckCircleIcon sx={{ fontSize: 16, color: '#10b981', flexShrink: 0 }} />
+                    )}
+                  </Box>
+                }
+                secondary={
+                  drawerOpen && (mod.level || mod.time) ? (
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                      {mod.level && (
+                        <Tooltip title={`Livello: ${mod.level}`} arrow placement="right">
+                          <Box sx={{
+                            display: 'flex',
+                            color: mod.level === 'Avanzato' ? 'error.main' : mod.level === 'Intermedio' ? 'warning.main' : 'success.main',
+                            opacity: 0.8
+                          }}>
+                            {mod.level === 'Base' && <SignalCellularAlt1Bar sx={{ fontSize: 14 }} />}
+                            {mod.level === 'Intermedio' && <SignalCellularAlt2Bar sx={{ fontSize: 14 }} />}
+                            {mod.level === 'Avanzato' && <SignalCellularAlt sx={{ fontSize: 14 }} />}
+                          </Box>
+                        </Tooltip>
+                      )}
+                      {mod.time && (
+                        <LaravelTypography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                          {mod.level && '• '} {mod.time}
+                        </LaravelTypography>
+                      )}
+                    </Box>
+                  ) : null
+                }
+                sx={{
+                  '& .MuiListItemSecondaryAction-root': { right: 16 }
+                }}
+              />
+
+              <Collapse in={drawerOpen && activeModule && activeModule.id === mod.id} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding sx={{ mb: 1, ml: 2, borderLeft: '1px solid #e5e7eb', my: 0.5 }}>
+                  {mod.id === activeModule?.id && exercises.length > 0 && (
+                    <LaravelListItem
+                      onClick={() => handleSectionSelect('exercises-section')}
+                      active={activeSection === 'exercises-section'}
+                      icon={<AssignmentOutlined sx={{ fontSize: 16 }} />}
+                      primary="Esercitazioni Pratiche"
+                      sx={{ py: 0, '& .MuiListItemButton-root': { py: 0.5, borderRadius: '0 8px 8px 0', ml: 0 } }}
+                      primaryTypographyProps={{
+                        fontSize: '0.8rem',
+                        color: activeSection === 'exercises-section' ? '#326ce5' : '#6b7280'
+                      }}
+                    />
+                  )}
+                  {mod.id === activeModule?.id && questions.length > 0 && (
+                    <LaravelListItem
+                      onClick={() => handleSectionSelect('quiz-section')}
+                      active={activeSection === 'quiz-section'}
+                      icon={<QuizOutlined sx={{ fontSize: 16 }} />}
+                      primary="Verifica delle Conoscenze"
+                      sx={{ py: 0, '& .MuiListItemButton-root': { py: 0.5, borderRadius: '0 8px 8px 0', ml: 0 } }}
+                      primaryTypographyProps={{
+                        fontSize: '0.8rem',
+                        color: activeSection === 'quiz-section' ? '#326ce5' : '#6b7280'
+                      }}
+                    />
+                  )}
+                </List>
+              </Collapse>
+            </React.Fragment>
+          ))}
+        </>
+      )}
+      </Box>
+
+      {!drawerOpen && isDesktop && (
+        <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, mb: 2 }}>
+            <IconButton
+              onClick={handleDrawerToggle}
+              size="small"
+              sx={{
+                bgcolor: '#326ce5',
+                color: 'white',
+                boxShadow: '0 4px 12px rgba(50, 108, 229, 0.3)',
+                '&:hover': { bgcolor: '#285ad1' }
+              }}
+            >
+                <ChevronRightIcon fontSize="small" />
+            </IconButton>
+        </Box>
+      )}
+    </Box>
+  );
+});
+
+const Sidebar = memo((props) => {
+  const {
+    mobileOpen,
+    handleDrawerToggle,
+    drawerWidth,
+    miniDrawerWidth, // Aggiunto
+    drawerOpen,
+    startResizing,
+    isResizing,
+    isDesktop,
+    sections,
+    onToggleConsole,
+    isConsoleOpen,
+    onOpenAuth,
+    ...otherProps
+  } = props;
+
+  return (
+    <Box
+      component="nav"
+      sx={{
+        width: { md: isDesktop ? (drawerOpen ? drawerWidth : miniDrawerWidth) : 0 },
+        flexShrink: { md: 0 },
+        transition: isResizing ? 'none' : (theme) => theme.transitions.create('width', {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.leavingScreen,
+        }),
+      }}
+    >
+      {/* Mobile drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true,
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 280 },
+        }}
+      >
+        <SidebarContent
+          {...otherProps}
+          sections={sections}
+          onToggleConsole={onToggleConsole}
+          isConsoleOpen={isConsoleOpen}
+          onOpenAuth={onOpenAuth}
+          handleDrawerToggle={handleDrawerToggle}
+          isDesktop={false}
+          drawerOpen={true}
+        />
+      </Drawer>
+      {/* Desktop drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerOpen ? drawerWidth : miniDrawerWidth,
+            borderRight: '1px solid #e2e8f0',
+            transition: isResizing ? 'none' : (theme) => theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.leavingScreen,
+            }),
+            overflowX: 'hidden'
+          },
+        }}
+        open
+      >
+        <SidebarContent
+          {...otherProps}
+          sections={sections}
+          onToggleConsole={onToggleConsole}
+          isConsoleOpen={isConsoleOpen}
+          onOpenAuth={onOpenAuth}
+          handleDrawerToggle={handleDrawerToggle}
+          isDesktop={true}
+          drawerOpen={drawerOpen}
+        />
+        {/* Handle di ridimensionamento */}
+        {drawerOpen && (
+          <Box
+            onMouseDown={startResizing}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: '4px',
+              cursor: 'col-resize',
+              zIndex: 1000,
+              '&:hover': {
+                bgcolor: 'primary.main',
+                opacity: 0.5,
+              },
+            }}
+          />
+        )}
+      </Drawer>
+    </Box>
+  );
+});
+
+export default Sidebar;

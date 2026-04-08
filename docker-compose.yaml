@@ -1,0 +1,87 @@
+services:
+  laravelstudy-frontend:
+    image: node:20-alpine
+    container_name: laravelstudy-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "8081:3000"
+    environment:
+      - VITE_WATCH_USE_POLLING=${VITE_WATCH_USE_POLLING}
+      - VITE_API_URL=${VITE_API_URL}
+    command: >
+      sh -c "
+      echo '📦 Frontend avviato. Inizio installazione dipendenze...' &&
+      npm install &&
+      echo '✅ Dipendenze installate con successo!' &&
+      echo '🧹 Pulizia cache di ottimizzazione Vite...' &&
+      rm -rf node_modules/.vite &&
+      echo '🚀 Avvio server di sviluppo Vite su http://localhost:8081...' &&
+      npm run dev -- --host 0.0.0.0 --port 3000 --force"
+    depends_on:
+      laravelstudy-backend:
+        condition: service_started
+
+  laravelstudy-backend:
+    image: node:20-alpine
+    container_name: laravelstudy-backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ${PROJECT_PUBLIC_PATH:-./project_public}:/project_public
+      - ${PROJECT_PRIVATE_PATH:-./project_private}:/project_private
+    ports:
+      - "5006:5006"
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - PORT=${PORT}
+      - NODE_ENV=${NODE_ENV}
+    command: >
+      sh -c "
+      echo '📦 Backend avviato. Inizio installazione dipendenze...' &&
+      npm install &&
+      echo '✅ Dipendenze installate con successo!' &&
+      echo '🚀 Avvio backend in modalità watch su http://localhost:5006...' &&
+      npm run dev"
+    depends_on:
+      laravelstudy-db:
+        condition: service_healthy
+      laravelstudy-redis:
+        condition: service_started
+
+  laravelstudy-db:
+    image: mariadb:10.11
+    container_name: laravelstudy-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - laravelstudy_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  laravelstudy-redis:
+    image: redis:7-alpine
+    container_name: laravelstudy-redis
+    ports:
+      - "6380:6379"
+
+volumes:
+  laravelstudy_db_data:

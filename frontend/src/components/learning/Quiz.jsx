@@ -1,0 +1,145 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl,
+  Alert,
+  Divider,
+} from '@mui/material';
+import { CheckCircleOutline, ErrorOutline } from '@mui/icons-material';
+
+import LaravelButton from '../ui/LaravelButton';
+import LaravelPaper from '../ui/LaravelPaper';
+import LaravelTypography from '../ui/LaravelTypography';
+
+const Quiz = ({ questions, onFinish }) => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const [finished, setFinished] = useState(false);
+
+  if (!questions || questions.length === 0) return null;
+
+  const handleOptionChange = (event) => {
+    setSelectedOption(parseInt(event.target.value));
+  };
+
+  const handleNext = () => {
+    const isCorrect = selectedOption === questions[currentQuestion].correct;
+    if (isCorrect) setScore(score + 1);
+
+    setShowResult(true);
+  };
+
+  const handleNextQuestion = () => {
+    setShowResult(false);
+    setSelectedOption(null);
+    if (currentQuestion + 1 < questions.length) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      setFinished(true);
+      if (onFinish) onFinish(score + (selectedOption === questions[currentQuestion].correct ? 1 : 0));
+    }
+  };
+
+  const restartQuiz = () => {
+    setCurrentQuestion(0);
+    setSelectedOption(null);
+    setShowResult(false);
+    setScore(0);
+    setFinished(false);
+  };
+
+  if (finished) {
+    return (
+      <Box sx={{ mt: 4, p: 4, textAlign: 'center', bgcolor: 'rgba(16, 185, 129, 0.05)', borderRadius: 4, border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+        <LaravelTypography variant="h5" weight="bold" sx={{ mb: 2, color: '#065f46' }}>🎉 Quiz Completato!</LaravelTypography>
+        <LaravelTypography variant="body1" sx={{ mb: 3 }}>
+          Hai risposto correttamente a {score} su {questions.length} domande.
+          Il tuo progresso è stato salvato con successo.
+        </LaravelTypography>
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+          <LaravelButton variant="contained" onClick={restartQuiz}>Riprova</LaravelButton>
+        </Box>
+      </Box>
+    );
+  }
+
+  const question = questions[currentQuestion];
+
+  return (
+    <Box sx={{ mt: 8, mb: 6 }}>
+      <Divider sx={{ mb: 6 }} />
+      <LaravelTypography variant="h5" weight="bold" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        🧠 Quiz di verifica <LaravelTypography variant="h6" color="text.secondary" component="span">({currentQuestion + 1}/{questions.length})</LaravelTypography>
+      </LaravelTypography>
+      <LaravelPaper sx={{ p: 4, bgcolor: '#ffffff', borderRadius: 4 }}>
+        <LaravelTypography variant="h6" weight="semibold" sx={{ mb: 3, color: '#111827' }}>
+          {question.question}
+        </LaravelTypography>
+        <FormControl component="fieldset" sx={{ width: '100%' }}>
+          <RadioGroup value={selectedOption !== null ? selectedOption : ''} onChange={handleOptionChange}>
+            {question.options.map((option, index) => (
+              <FormControlLabel
+                key={index}
+                value={index}
+                control={<Radio disabled={showResult} color="primary" />}
+                label={option}
+                sx={{
+                  my: 0.75,
+                  mx: 0,
+                  p: 1.5,
+                  borderRadius: 3,
+                  transition: 'all 0.2s ease',
+                  bgcolor: showResult && index === question.correct ? 'rgba(76, 175, 80, 0.08)' :
+                           showResult && selectedOption === index && index !== question.correct ? 'rgba(244, 67, 54, 0.08)' :
+                           selectedOption === index ? 'rgba(50, 108, 229, 0.04)' : 'transparent',
+                  border: showResult && index === question.correct ? '1px solid #4caf50' :
+                          showResult && selectedOption === index && index !== question.correct ? '1px solid #f44336' :
+                          selectedOption === index ? '1px solid #326ce540' : '1px solid #e5e7eb',
+                  '&:hover': {
+                    bgcolor: showResult ? 'inherit' : 'rgba(50, 108, 229, 0.02)',
+                  }
+                }}
+              />
+            ))}
+          </RadioGroup>
+        </FormControl>
+
+        {showResult && (
+          <Box sx={{ mt: 4 }}>
+            <Alert
+              severity={selectedOption === question.correct ? "success" : "error"}
+              icon={selectedOption === question.correct ? <CheckCircleOutline /> : <ErrorOutline />}
+              sx={{ borderRadius: 3, border: '1px solid', borderColor: selectedOption === question.correct ? '#4caf5030' : '#f4433630' }}
+            >
+              <LaravelTypography weight="bold" variant="subtitle2" sx={{ mb: 0.5 }}>
+                {selectedOption === question.correct ? "Ottimo lavoro!" : "Quasi corretto!"}
+              </LaravelTypography>
+              <LaravelTypography variant="body2">{question.explanation}</LaravelTypography>
+            </Alert>
+            <LaravelButton variant="contained" sx={{ mt: 3 }} onClick={handleNextQuestion}>
+              {currentQuestion + 1 < questions.length ? "Prossima domanda" : "Vedi risultati"}
+            </LaravelButton>
+          </Box>
+        )}
+
+        {!showResult && (
+          <LaravelButton
+            variant="contained"
+            disabled={selectedOption === null}
+            sx={{ mt: 4, minWidth: 160 }}
+            onClick={handleNext}
+          >
+            Verifica risposta
+          </LaravelButton>
+        )}
+      </LaravelPaper>
+    </Box>
+  );
+};
+
+export default Quiz;

@@ -1,0 +1,88 @@
+import React from 'react';
+import { Box } from '@mui/material';
+import CourseCard from './CourseCard';
+import LaravelTypography from '../ui/LaravelTypography';
+import LaravelContainer from '../ui/LaravelContainer';
+import LaravelGrid from '../ui/LaravelGrid';
+
+const HomeView = ({ courses = [], onSelectCourse }) => {
+  return (
+    <LaravelContainer maxWidth="xl" sx={{ mt: 6, mb: 10 }}>
+      <Box sx={{ mb: 8, textAlign: 'center' }}>
+        <LaravelTypography
+          variant="h3"
+          weight="bold"
+          sx={{ mb: 2, fontSize: { xs: '2rem', md: '3rem' } }}
+        >
+          I tuoi percorsi di studio
+        </LaravelTypography>
+        <LaravelTypography
+          variant="h6"
+          color="text.secondary"
+          sx={{ maxWidth: 700, mx: 'auto', lineHeight: 1.6 }}
+        >
+          Esplora la nostra libreria di corsi e roadmap per padroneggiare Kubernetes e l'ecosistema Cloud Native.
+        </LaravelTypography>
+      </Box>
+
+      <LaravelTypography variant="h5" weight="bold" sx={{ mb: 4, color: '#1e293b' }}>
+        I Nostri Percorsi
+      </LaravelTypography>
+
+      <LaravelGrid
+        columns={{
+          xs: 1,
+          sm: 2,
+          md: 3
+        }}
+        gap={4}
+      >
+        {courses.filter(c => !c.comingSoon).map((course) => (
+          <Box
+            key={course.id}
+            sx={{
+              minWidth: 0,
+              width: '100%'
+            }}
+          >
+            <CourseCard
+              course={course}
+              onSelect={onSelectCourse}
+            />
+          </Box>
+        ))}
+      </LaravelGrid>
+
+      <LaravelTypography variant="h5" weight="bold" sx={{ mb: 4, mt: 10, color: '#64748b', opacity: 0.8 }}>
+        Prossimamente
+      </LaravelTypography>
+
+      <LaravelGrid
+        columns={{
+          xs: 1,
+          sm: 2,
+          md: 3
+        }}
+        gap={4}
+        sx={{ opacity: 0.8 }}
+      >
+        {courses.filter(c => c.comingSoon).map((course) => (
+          <Box
+            key={course.id}
+            sx={{
+              minWidth: 0,
+              width: '100%'
+            }}
+          >
+            <CourseCard
+              course={course}
+              onSelect={onSelectCourse}
+            />
+          </Box>
+        ))}
+      </LaravelGrid>
+    </LaravelContainer>
+  );
+};
+
+export default HomeView;

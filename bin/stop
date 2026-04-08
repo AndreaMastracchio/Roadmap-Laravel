@@ -1,0 +1,7 @@
+#!/bin/bash
+echo "🛑 Spegnimento della piattaforma..."
+
+# Ferma l'ambiente di sviluppo
+docker compose down > /dev/null 2>&1
+
+echo "✅ Tutti gli ambienti sono stati fermati con successo."

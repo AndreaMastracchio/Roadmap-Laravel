@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "📊 Stato dell'ambiente:"
+docker compose ps
